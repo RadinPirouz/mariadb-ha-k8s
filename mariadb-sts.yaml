@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: db
+spec:
+  serviceName: "db-svc"
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      initContainers:
+      - name: init-mariadb
+        image: mariadb
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          echo 'Starting init-mariadb';
+          ls /mnt/config-map
+          [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+          if [[ $ordinal -eq 0 ]]; then
+            cp /mnt/config-map/master.cnf /etc/mysql/conf.d/server-id.cnf
+            cp /mnt/config-map/master.sql /docker-entrypoint-initdb.d
+          else
+            cp /mnt/config-map/slave.cnf /etc/mysql/conf.d/server-id.cnf
+            cp /mnt/config-map/slave.sql /docker-entrypoint-initdb.d
+          fi
+          ls /etc/mysql/conf.d/
+          cat /etc/mysql/conf.d/server-id.cnf
+        volumeMounts:
+          - name: mariadb-configureations
+            mountPath: /mnt/config-map
+          - name: mariadb-config-pod
+            mountPath: /etc/mysql/conf.d/
+          - name: mariadb-init-sql
+            mountPath: /docker-entrypoint-initdb.d
+
+      containers:
+        - name: mariadb
+          image: mariadb
+          ports:
+            - name: db-port
+              containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: "123"
+            - name: MARIADB_USERNAME
+              value: "radin"
+            - name: MARIADB_PASSWORD
+              value: "123"
+            - name: MYSQL_INITDB_SKIP_TZINFO
+              value: "1"
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql
+            - name: mariadb-config-pod
+              mountPath: /etc/mysql/conf.d/
+            - name: mariadb-init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mariadb-configureations
+          configMap:
+            name: configmap-mariadb
+        - name: mariadb-config-pod
+          emptyDir: {}
+        - name: mariadb-init-sql
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: db-data
+      spec:
+        accessModes: ["ReadWriteMany"]
+        storageClassName: "longhorn"
+        resources:
+          requests:
+            storage: 512Mi
