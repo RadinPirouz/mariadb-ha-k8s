@@ -7,11 +7,11 @@ data:
   master.cnf: | 
     [mariadb]
     log-bin
-    server_id=1
+    log-basename=my-mariadb
   slave.cnf: | 
     [mariadb]
     log-bin
-    server_id=2
+    log-basename=my-mariadb
   master.sql: |
     CREATE USER 'radin'@'%' IDENTIFIED BY '123';
     GRANT REPLICATION REPLICA ON *.* TO 'radin'@'%';

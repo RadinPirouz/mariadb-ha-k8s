@@ -33,6 +33,7 @@ spec:
             cp /mnt/config-map/slave.cnf /etc/mysql/conf.d/server-id.cnf
             cp /mnt/config-map/slave.sql /docker-entrypoint-initdb.d
           fi
+          echo server-id=$((3000 + $ordinal)) >> etc/mysql/conf.d/server-id.cnf
           ls /etc/mysql/conf.d/
           cat /etc/mysql/conf.d/server-id.cnf
         volumeMounts:
