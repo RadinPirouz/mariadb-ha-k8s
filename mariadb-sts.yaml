@@ -51,12 +51,18 @@ spec:
             - name: db-port
               containerPort: 3306
           env:
-            - name: MARIADB_ROOT_PASSWORD
-              value: "123"
             - name: MARIADB_USERNAME
               value: "radin"
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretRefKey:
+                  name: db-password
+                  key: root_pass
             - name: MARIADB_PASSWORD
-              value: "123"
+              valueFrom:
+                secretRefKey:
+                  name: db-password
+                  key: user_pass
             - name: MYSQL_INITDB_SKIP_TZINFO
               value: "1"
           volumeMounts:
