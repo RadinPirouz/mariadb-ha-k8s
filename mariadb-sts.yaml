@@ -55,12 +55,12 @@ spec:
               value: "radin"
             - name: MARIADB_ROOT_PASSWORD
               valueFrom:
-                secretRefKey:
+                secretKeyRef:
                   name: db-password
                   key: root_pass
             - name: MARIADB_PASSWORD
               valueFrom:
-                secretRefKey:
+                secretKeyRef:
                   name: db-password
                   key: user_pass
             - name: MYSQL_INITDB_SKIP_TZINFO
